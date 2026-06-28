@@ -351,7 +351,7 @@ LMG2L["StickerButton_1f"]["BackgroundColor3"] = Color3.fromRGB(51, 51, 51)
 LMG2L["StickerButton_1f"]["Image"] = getcustomasset("RBX_Chat/assets/plus.png")
 LMG2L["StickerButton_1f"]["Size"] = UDim2.new(0, 30, 0, 30)
 LMG2L["StickerButton_1f"]["Name"] = "StickerButton"
-LMG2L["StickerButton_1f"]["Position"] = UDim2.new(0, 340, 0, 210)
+LMG2L["StickerButton_1f"]["Position"] = UDim2.new(0, 339, 0, 210)
 
 LMG2L["UICorner_1f"] = Instance.new("UICorner", LMG2L["StickerButton_1f"])
 LMG2L["UICorner_1f"]["CornerRadius"] = UDim.new(0, 3)
