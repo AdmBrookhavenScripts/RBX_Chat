@@ -1,0 +1,39 @@
+84978207629104 -- Davi Plays
+96479744307940 -- Eu fingindo que tô entendendo tudo
+107763703648253 -- Goku Like
+108187342800714 -- Goku pensando
+84042465980408 -- Faz o L
+85581643069781 -- Simpsons
+85908414742447 -- Sanesis zapi zapi
+79418494190368 -- Canecu estourado
+129643003744356 -- Braços gigantesuau
+80954090307961 -- Cocozao
+84860544006590 -- Sanesis na janela u
+95215556206421 -- Pay na escola me disseram que eu tenho cabesinha
+134928856777547 -- Mantenha a calma e faça o L
+82110346741035 -- Neymar
+71665324811086 -- Asdfg
+120773772366995 -- Skibidi
+77021897132644 -- No se
+78149263910071 -- Geover picadaso
+133525062547374 -- Doguinho
+95712492775902 -- Nikolas tesla
+91833030514471 -- Doge
+136748572019736 -- Chinelas
+109532835747980 -- Krators
+96865183343045 -- Floppa
+89238542560657 -- Cachorro no se
+107229543061468 -- Suspeito
+136036651791970 -- AAAAAAA
+83790527393369 -- Brutal
+96265657914483 -- Muito iteligente
+85640830876767 -- Kaggueiu
+130017597301913 -- tic toci
+81122606458191 -- eitagattip
+116329605570889 -- cachoro chupetau
+90252014355941 -- vulcao
+128135735356069 -- Coringa bob esponja
+71571549314800 -- Apodreça
+107904289617864 -- The Rock
+113021657673649 -- no se u
+89456746830210 -- no se u
