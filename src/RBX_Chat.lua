@@ -408,7 +408,6 @@ local function AddSticker(id)
 	btn.Image = "rbxassetid://" .. id
 	btn.MouseButton1Click:Connect(function()
 		LMG2L["TextBox_19"].Text = LMG2L["TextBox_19"].Text .. ":" .. id .. ":"
-		LMG2L["TextBox_19"].CursorPosition = #LMG2L["TextBox_19"].Text + 1
 	end)
 end
 
