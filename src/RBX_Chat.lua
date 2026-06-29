@@ -77,9 +77,13 @@ getgenv().Running = true
 
 local LMG2L = {}
 
-LMG2L["RBX_Chat_1"] = Instance.new("ScreenGui", Player:FindFirstChild("PlayerGui"))
+local TargetParent = (gethui and gethui()) or cloneref(game:GetService("CoreGui")) or Player:FindFirstChild("PlayerGui")
+
+LMG2L["RBX_Chat_1"] = Instance.new("ScreenGui", TargetParent)
 LMG2L["RBX_Chat_1"]["Name"] = "RBX_Chat"
+LMG2L["RBX_Chat_1"]["ResetOnSpawn"] = false
 LMG2L["RBX_Chat_1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
+LMG2L["RBX_Chat_1"]["DisplayOrder"] = 2147483647
 
 LMG2L["MinimizeToggle_2"] = Instance.new("ImageButton", LMG2L["RBX_Chat_1"])
 LMG2L["MinimizeToggle_2"]["BorderSizePixel"] = 0
@@ -92,6 +96,7 @@ LMG2L["MinimizeToggle_2"]["Name"] = "MinimizeToggle"
 LMG2L["MinimizeToggle_2"]["Position"] = UDim2.new(0, 118, 0, 116)
 LMG2L["MinimizeToggle_2"]["Active"] = true
 LMG2L["MinimizeToggle_2"]["Draggable"] = true
+LMG2L["MinimizeToggle_2"]["ZIndex"] = 999
 
 LMG2L["MainFrame_3"] = Instance.new("Frame", LMG2L["RBX_Chat_1"])
 LMG2L["MainFrame_3"]["Active"] = true
@@ -381,12 +386,7 @@ LMG2L["UIStroke_1e"]["Color"] = Color3.fromRGB(63, 63, 63)
 local MessageTemplate = LMG2L["MessageFrame_6"]
 MessageTemplate.Parent = nil
 
-local Stickers_File = "https://github.com/AdmBrookhavenScripts/Stickers/raw/refs/heads/main/StickersList.txt"
-
 local ws
-pcall(function()
-	ws = WebSocket.connect("wss://rbxchat.rbxprojects.workers.dev")
-end)
 
 LMG2L["MinimizeToggle_2"].MouseButton1Click:Connect(function()
 	LMG2L["MainFrame_3"].Visible = not LMG2L["MainFrame_3"].Visible
@@ -495,8 +495,11 @@ local function ReceiveMessage(username, userId, text, timeStr)
 	local ScrollFrame = LMG2L["ScrollingFrame_4"]
 	local MaxScroll = ScrollFrame.AbsoluteCanvasSize.Y - ScrollFrame.AbsoluteWindowSize.Y
 	local IsNearBottom = ScrollFrame.CanvasPosition.Y >= (MaxScroll - 50)
+	local IsMyMessage = (userId == Player.UserId)
+
 	NewMessage.Parent = ScrollFrame
-	if IsNearBottom or MaxScroll < 0 then
+	
+	if IsNearBottom or MaxScroll < 0 or IsMyMessage then
 		task.spawn(function()
 			task.wait()
 			ScrollFrame.CanvasPosition = Vector2.new(0, ScrollFrame.AbsoluteCanvasSize.Y - ScrollFrame.AbsoluteWindowSize.Y)
@@ -533,19 +536,46 @@ local function ReceiveMessage(username, userId, text, timeStr)
     end
 end
 
-if ws then
-	ws.OnMessage:Connect(function(msg)
-	LMG2L["Loading_17"]["Visible"] = false
-		local success, data = pcall(function() return HttpService:JSONDecode(msg) end)
-		if success and data.username and data.text then
-			ReceiveMessage(data.username, data.userId, data.text, data.time)
-		end
-	end)
+local function ConnectWebSocket()
+    local success, socket = pcall(function()
+        return WebSocket.connect("wss://rbxchat.rbxprojects.workers.dev")
+    end)
+    
+    if success and socket then
+        ws = socket
+        
+        ws.OnMessage:Connect(function(msg)
+            LMG2L["Loading_17"]["Visible"] = false
+            local s, data = pcall(function() return HttpService:JSONDecode(msg) end)
+            if s and data.username and data.text then
+                ReceiveMessage(data.username, data.userId, data.text, data.time)
+            end
+        end)
+        
+        if ws.OnClose then
+            ws.OnClose:Connect(function()
+                ws = nil
+            end)
+        end
+        return true
+    else
+        ws = nil
+        return false
+    end
 end
+
+task.spawn(ConnectWebSocket)
 
 LMG2L["SendMessage_1c"].MouseButton1Click:Connect(function()
 	local Text = LMG2L["TextBox_19"].Text
+	
 	if Text:match("%S") or Text:match(":%d+:") then
+		LMG2L["Loading_17"]["Visible"] = true
+		
+		if not ws then
+			ConnectWebSocket()
+		end
+		
 		if ws then
 			local data = {
 				username = Player.DisplayName,
@@ -553,12 +583,22 @@ LMG2L["SendMessage_1c"].MouseButton1Click:Connect(function()
 				text = Text,
 				time = os.date("%H:%M")
 			}
-			LMG2L["Loading_17"]["Visible"] = true
-			ws:Send(HttpService:JSONEncode(data))
+			
+			local success, err = pcall(function()
+				ws:Send(HttpService:JSONEncode(data))
+			end)
+			
+			if not success then
+				LMG2L["Loading_17"]["Visible"] = false
+				SendNotification("RBX Chat", "Erro na conexão. Tente enviar novamente.", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
+				ws = nil 
+			end
 		else
-		    warn("error")
+			LMG2L["Loading_17"]["Visible"] = false
+			SendNotification("RBX Chat", "Modo Offline ativo. Servidor indisponível.", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
 			ReceiveMessage(Player.DisplayName, Player.UserId, Text, os.date("%H:%M"))
 		end
+		
 		LMG2L["TextBox_19"].Text = ""
 	end
 end)
