@@ -58,6 +58,11 @@ SendNotification("RBX Chat", "Baixando asset ''send-horizontal.png''...", 3, get
 writefile("RBX_Chat/assets/send-horizontal.png", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/assets/send-horizontal.png"))
 end
 
+if not isfile("RBX_Chat/assets/close.png") then
+SendNotification("RBX Chat", "Baixando asset ''close.png''...", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
+writefile("RBX_Chat/assets/close.png", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/assets/close.png"))
+end
+
 if not isfile("RBX_Chat/stickers/Stickers.lua") then
 SendNotification("RBX Chat", "Baixando arquivo ''Stickers.lua''...", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
 writefile("RBX_Chat/stickers/Stickers.lua", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/stickers/Stickers.lua"))
@@ -321,9 +326,40 @@ LMG2L["TextLabel_18"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
 LMG2L["TextLabel_18"]["FontFace"] = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
 LMG2L["TextLabel_18"]["TextColor3"] = Color3.fromRGB(255, 255, 255)
 LMG2L["TextLabel_18"]["BackgroundTransparency"] = 1
-LMG2L["TextLabel_18"]["Size"] = UDim2.new(0, 126, 0, 36)
+LMG2L["TextLabel_18"]["Size"] = UDim2.new(0, 72, 0, 36)
 LMG2L["TextLabel_18"]["Text"] = "RBX Chat"
 LMG2L["TextLabel_18"]["Position"] = UDim2.new(0, 12, 0, 0)
+
+LMG2L["NewMessagesBtn"] = Instance.new("TextButton", LMG2L["MainFrame_3"])
+LMG2L["NewMessagesBtn"]["BorderSizePixel"] = 0
+LMG2L["NewMessagesBtn"]["TextSize"] = 13
+LMG2L["NewMessagesBtn"]["TextColor3"] = Color3.fromRGB(255, 255, 255)
+LMG2L["NewMessagesBtn"]["BackgroundColor3"] = Color3.fromRGB(255, 95, 95)
+LMG2L["NewMessagesBtn"]["FontFace"] = Font.new("rbxasset://fonts/families/BuilderSans.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+LMG2L["NewMessagesBtn"]["Size"] = UDim2.new(0, 166, 0, 18)
+LMG2L["NewMessagesBtn"]["Visible"] = false
+LMG2L["NewMessagesBtn"]["Position"] = UDim2.new(0, 90, 0, 9)
+LMG2L["NewMessagesBtn"]["AutomaticSize"] = Enum.AutomaticSize.X
+
+LMG2L["NewMessagesBtn_Corner"] = Instance.new("UICorner", LMG2L["NewMessagesBtn"])
+LMG2L["NewMessagesBtn_Corner"]["CornerRadius"] = UDim.new(0, 8)
+
+local UIPadding_Btn = Instance.new("UIPadding", LMG2L["NewMessagesBtn"])
+UIPadding_Btn.PaddingLeft = UDim.new(0, 8)
+UIPadding_Btn.PaddingRight = UDim.new(0, 26)
+
+LMG2L["CloseNewMessagesBtn"] = Instance.new("ImageButton", LMG2L["NewMessagesBtn"])
+LMG2L["CloseNewMessagesBtn"]["Name"] = "CloseBtn"
+LMG2L["CloseNewMessagesBtn"]["BackgroundTransparency"] = 1
+LMG2L["CloseNewMessagesBtn"]["AutoButtonColor"] = false
+LMG2L["CloseNewMessagesBtn"]["Size"] = UDim2.new(0, 18, 0, 18)
+LMG2L["CloseNewMessagesBtn"]["Position"] = UDim2.new(1, 7, 0.5, 0)
+LMG2L["CloseNewMessagesBtn"]["AnchorPoint"] = Vector2.new(0, 0.5)
+LMG2L["CloseNewMessagesBtn"]["Image"] = getcustomasset("RBX_Chat/assets/close.png")
+LMG2L["CloseNewMessagesBtn"].MouseButton1Click:Connect(function()
+    LMG2L["NewMessagesBtn"].Visible = false
+    UnreadMessagesCount = 0
+end)
 
 LMG2L["TextBox_19"] = Instance.new("TextBox", LMG2L["MainFrame_3"])
 LMG2L["TextBox_19"]["PlaceholderColor3"] = Color3.fromRGB(151, 151, 151)
@@ -387,6 +423,10 @@ local MessageTemplate = LMG2L["MessageFrame_6"]
 MessageTemplate.Parent = nil
 
 local ws
+local UnreadMessagesCount = 0
+local FirstUnreadTime = ""
+local isConnecting = false
+local ConnectionID = 0
 
 LMG2L["MinimizeToggle_2"].MouseButton1Click:Connect(function()
 	LMG2L["MainFrame_3"].Visible = not LMG2L["MainFrame_3"].Visible
@@ -504,6 +544,25 @@ local function ReceiveMessage(username, userId, text, timeStr)
 			task.wait()
 			ScrollFrame.CanvasPosition = Vector2.new(0, ScrollFrame.AbsoluteCanvasSize.Y - ScrollFrame.AbsoluteWindowSize.Y)
 		end)
+		if IsNearBottom then
+			LMG2L["NewMessagesBtn"].Visible = false
+			UnreadMessagesCount = 0
+		end
+	else
+		if not IsMyMessage then
+			UnreadMessagesCount = UnreadMessagesCount + 1
+			if UnreadMessagesCount == 1 then
+				FirstUnreadTime = timeStr or os.date("%H:%M")
+			end
+			
+			if UnreadMessagesCount == 1 then
+				LMG2L["NewMessagesBtn"].Text = "1 mensagem nova desde " .. FirstUnreadTime
+			else
+				LMG2L["NewMessagesBtn"].Text = tostring(UnreadMessagesCount) .. " mensagens novas desde " .. FirstUnreadTime
+			end
+			
+			LMG2L["NewMessagesBtn"].Visible = true
+		end
 	end
 	
 	task.delay(1000, function()
@@ -536,7 +595,33 @@ local function ReceiveMessage(username, userId, text, timeStr)
     end
 end
 
+LMG2L["NewMessagesBtn"].MouseButton1Click:Connect(function()
+	local ScrollFrame = LMG2L["ScrollingFrame_4"]
+	ScrollFrame.CanvasPosition = Vector2.new(0, ScrollFrame.AbsoluteCanvasSize.Y - ScrollFrame.AbsoluteWindowSize.Y)
+	LMG2L["NewMessagesBtn"].Visible = false
+	UnreadMessagesCount = 0
+end)
+
+LMG2L["ScrollingFrame_4"]:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+	local ScrollFrame = LMG2L["ScrollingFrame_4"]
+	local MaxScroll = ScrollFrame.AbsoluteCanvasSize.Y - ScrollFrame.AbsoluteWindowSize.Y
+	if ScrollFrame.CanvasPosition.Y >= (MaxScroll - 50) and LMG2L["NewMessagesBtn"].Visible then
+		LMG2L["NewMessagesBtn"].Visible = false
+		UnreadMessagesCount = 0
+	end
+end)
+
 local function ConnectWebSocket()
+    if isConnecting then return false end
+    isConnecting = true
+    ConnectionID = ConnectionID + 1
+    local CurrentConnection = ConnectionID
+    
+    if ws then
+        pcall(function() ws:Close() end)
+        ws = nil
+    end
+
     local success, socket = pcall(function()
         return WebSocket.connect("wss://rbxchat.rbxprojects.workers.dev")
     end)
@@ -545,6 +630,7 @@ local function ConnectWebSocket()
         ws = socket
         
         ws.OnMessage:Connect(function(msg)
+            if CurrentConnection ~= ConnectionID then return end
             LMG2L["Loading_17"]["Visible"] = false
             local s, data = pcall(function() return HttpService:JSONDecode(msg) end)
             if s and data.username and data.text then
@@ -554,22 +640,29 @@ local function ConnectWebSocket()
         
         if ws.OnClose then
             ws.OnClose:Connect(function()
-                ws = nil
+                if CurrentConnection == ConnectionID then
+                    ws = nil
+                end
             end)
         end
+        isConnecting = false
         return true
     else
         ws = nil
+        isConnecting = false
         return false
     end
 end
 
 task.spawn(ConnectWebSocket)
 
+local IsSending = false
 LMG2L["SendMessage_1c"].MouseButton1Click:Connect(function()
+    if IsSending then return end
 	local Text = LMG2L["TextBox_19"].Text
 	
 	if Text:match("%S") or Text:match(":%d+:") then
+        IsSending = true
 		LMG2L["Loading_17"]["Visible"] = true
 		
 		if not ws then
@@ -590,7 +683,7 @@ LMG2L["SendMessage_1c"].MouseButton1Click:Connect(function()
 			
 			if not success then
 				LMG2L["Loading_17"]["Visible"] = false
-				SendNotification("RBX Chat", "Erro na conexão. Tente enviar novamente.", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
+				SendNotification("RBX Chat", "Erro na conexão. Tente enviar novamente.", 3,  getcustomasset("RBX_Chat/assets/message-square-more.png"))
 				ws = nil 
 			end
 		else
@@ -600,6 +693,7 @@ LMG2L["SendMessage_1c"].MouseButton1Click:Connect(function()
 		end
 		
 		LMG2L["TextBox_19"].Text = ""
+        IsSending = false
 	end
 end)
 
