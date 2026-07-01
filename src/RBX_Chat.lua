@@ -3,7 +3,8 @@ local StarterGui = cloneref(game:GetService("StarterGui"))
 local Players = cloneref(game:GetService("Players"))
 local HttpService = cloneref(game:GetService("HttpService"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
-local httpRequest = request or http_request or syn.request
+local ContentProvider = cloneref(game:GetService("ContentProvider"))
+local HttpRequest = request or http_request or syn.request
 
 local Player = Players.LocalPlayer
 
@@ -89,6 +90,16 @@ if not isfile("RBX_Chat/assets/arrow-left.png") then
     writefile("RBX_Chat/assets/arrow-left.png", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/assets/arrow-left.png"))
 end
 
+if not isfile("RBX_Chat/assets/audio-lines.png") then
+    SendNotification("RBX Chat", "Baixando asset ''audio-lines.png''...", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
+    writefile("RBX_Chat/assets/audio-lines.png", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/assets/audio-lines.png"))
+end
+
+if not isfile("RBX_Chat/assets/sticker.png") then
+    SendNotification("RBX Chat", "Baixando asset ''sticker.png''...", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
+    writefile("RBX_Chat/assets/sticker.png", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/assets/sticker.png"))
+end
+
 if not isfile("RBX_Chat/stickers/Stickers.lua") then
     SendNotification("RBX Chat", "Baixando arquivo ''Stickers.lua''...", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
     writefile("RBX_Chat/stickers/Stickers.lua", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/stickers/Stickers.lua"))
@@ -152,7 +163,7 @@ function UILibrary:CreateAudioPlayer(id, title, parent)
     if not getgenv().AudioNames[tostring(id)] then
         task.spawn(function()
             local s, r = pcall(function()
-                local response = httpRequest({
+                local response = HttpRequest({
                     Url = "https://economy.roproxy.com/v2/assets/" .. tostring(id) .. "/details",
                     Method = "GET"
                 })
@@ -507,16 +518,37 @@ local MenuPadding = Instance.new("UIPadding", MenuSelection)
 MenuPadding.PaddingTop = UDim.new(0, 8)
 MenuPadding.PaddingBottom = UDim.new(0, 8)
 
-local function CreateTabEntranceBtn(text, parent)
+local function CreateTabEntranceBtn(text, iconFile, parent)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(1, -16, 0, 30)
     btn.BackgroundColor3 = Color3.fromRGB(63, 63, 63)
     btn.BackgroundTransparency = 0.4
     btn.BorderSizePixel = 0
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-    btn.TextSize = 12
+    btn.Text = ""
+    
+    local btnLayout = Instance.new("UIListLayout", btn)
+    btnLayout.FillDirection = Enum.FillDirection.Horizontal
+    btnLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    btnLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    btnLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    btnLayout.Padding = UDim.new(0, 6)
+    
+    local btnIcon = Instance.new("ImageLabel", btn)
+    btnIcon.Size = UDim2.new(0, 16, 0, 16)
+    btnIcon.BackgroundTransparency = 1
+    btnIcon.Image = getcustomasset("RBX_Chat/assets/" .. iconFile)
+    btnIcon.LayoutOrder = 1
+    
+    local btnText = Instance.new("TextLabel", btn)
+    btnText.BackgroundTransparency = 1
+    btnText.Size = UDim2.new(0, 0, 1, 0)
+    btnText.AutomaticSize = Enum.AutomaticSize.X
+    btnText.Text = text
+    btnText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnText.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+    btnText.TextSize = 12
+    btnText.LayoutOrder = 2
+    
     local uic = Instance.new("UICorner", btn)
     uic.CornerRadius = UDim.new(0, 4)
     local uis = Instance.new("UIStroke", btn)
@@ -525,9 +557,9 @@ local function CreateTabEntranceBtn(text, parent)
     return btn
 end
 
-local BtnStickers = CreateTabEntranceBtn("Figurinhas", MenuSelection)
+local BtnStickers = CreateTabEntranceBtn("Figurinhas", "sticker.png", MenuSelection)
 BtnStickers.LayoutOrder = 1
-local BtnAudios = CreateTabEntranceBtn("Áudios", MenuSelection)
+local BtnAudios = CreateTabEntranceBtn("Áudios", "audio-lines.png", MenuSelection)
 BtnAudios.LayoutOrder = 2
 
 LMG2L["StickerScroll_21"] = Instance.new("ScrollingFrame", LMG2L["StickerMenu_20"])
@@ -989,7 +1021,15 @@ local function AddSticker(id)
     btn.BackgroundTransparency = 1
     btn.Image = "rbxassetid://" .. id
     btn.MouseButton1Click:Connect(function()
-        LMG2L["TextBox_19"].Text = LMG2L["TextBox_19"].Text .. ":" .. id .. ":"
+        LMG2L["TextBox_19"].Text = LMG2L["TextBox_19"].Text .. ":sticker:" .. id .. ":"
+    end)
+
+    task.spawn(function()
+        ContentProvider:PreloadAsync({btn}, function(contentId, status)
+            if status == Enum.AssetFetchStatus.Failure then
+                btn.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+            end
+        end)
     end)
 end
 
@@ -1082,7 +1122,15 @@ local function ReceiveMessage(username, userId, text, timeStr)
     NewMessage.Thumbnail.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(userId) .. "&w=420&h=420"
     NewMessage.Username.Time.Text = timeStr or os.date("%H:%M")
 
-    local textOnly = text:gsub(":audio:%d+:", ""):gsub(":%d+:", "")
+    task.spawn(function()
+        ContentProvider:PreloadAsync({NewMessage.Thumbnail}, function(contentId, status)
+            if status == Enum.AssetFetchStatus.Failure then
+                NewMessage.Thumbnail.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+            end
+        end)
+    end)
+
+    local textOnly = text:gsub(":audio:%d+:", ""):gsub(":sticker:%d+:", "")
     textOnly = textOnly:gsub("^%s+", ""):gsub("%s+$", "")
     
     if textOnly == "" then
@@ -1100,7 +1148,7 @@ local function ReceiveMessage(username, userId, text, timeStr)
 
     local AttachList = Instance.new("UIListLayout", AttachmentContainer)
     AttachList.SortOrder = Enum.SortOrder.LayoutOrder
-    AttachList.Padding = UDim.new(0, 4)
+    AttachList.Padding = UDim.new(0, 5)
 
     local StickerContainer = Instance.new("Frame", AttachmentContainer)
     StickerContainer.Name = "Stickers"
@@ -1110,7 +1158,7 @@ local function ReceiveMessage(username, userId, text, timeStr)
     StickerContainer.LayoutOrder = 1
 
     local UIGrid = Instance.new("UIGridLayout", StickerContainer)
-    UIGrid.CellSize = UDim2.new(0, 60, 0, 60)
+    UIGrid.CellSize = UDim2.new(0, 70, 0, 70)
     UIGrid.CellPadding = UDim2.new(0, 5, 0, 5)
     UIGrid.SortOrder = Enum.SortOrder.LayoutOrder
 
@@ -1123,7 +1171,7 @@ local function ReceiveMessage(username, userId, text, timeStr)
 
     local AudioList = Instance.new("UIListLayout", AudioContainer)
     AudioList.SortOrder = Enum.SortOrder.LayoutOrder
-    AudioList.Padding = UDim.new(0, 4)
+    AudioList.Padding = UDim.new(0, 5)
 
     local hasAttachments = false
 
@@ -1134,11 +1182,19 @@ local function ReceiveMessage(username, userId, text, timeStr)
     end
 
     local textForStickers = text:gsub(":audio:%d+:", "")
-    for id in textForStickers:gmatch(":(%d+):") do
-        hasAttachments = true
-        local img = Instance.new("ImageLabel", StickerContainer)
-        img.BackgroundTransparency = 1
-        img.Image = "rbxassetid://" .. id
+    for id in textForStickers:gmatch(":sticker:(%d+):") do
+    hasAttachments = true
+    local img = Instance.new("ImageLabel", StickerContainer)
+    img.BackgroundTransparency = 1
+    img.Image = "rbxassetid://" .. id
+    
+    task.spawn(function()
+        ContentProvider:PreloadAsync({img}, function(contentId, status)
+            if status == Enum.AssetFetchStatus.Failure then
+                img.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+             end
+          end)
+       end)
     end
 
     if not hasAttachments then
@@ -1204,7 +1260,7 @@ local function ReceiveMessage(username, userId, text, timeStr)
     end)
 
     local StickerCount = 0
-    NotifyText = NotifyText:gsub(":%d+:", function()
+    NotifyText = NotifyText:gsub(":sticker:%d+:", function()
         StickerCount += 1
         return ""
     end)
@@ -1304,7 +1360,7 @@ LMG2L["SendMessage_1c"].MouseButton1Click:Connect(function()
     if IsSending then return end
     local Text = LMG2L["TextBox_19"].Text
     
-    if Text:match("%S") or Text:match(":%d+:") or Text:match(":audio:%d+:") then
+    if Text:match("%S") or Text:match(":sticker:%d+:") or Text:match(":audio:%d+:") then
         IsSending = true
         LMG2L["Loading_17"]["Visible"] = true
         
