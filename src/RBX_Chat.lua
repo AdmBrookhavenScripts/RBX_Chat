@@ -230,6 +230,9 @@ function UILibrary:CreateAudioPlayer(id, title, parent)
         end
     end
 
+    selfAudio.Frame = aFrame
+    selfAudio.IsPlaying = function() return isPlaying end
+
     selfAudio.Pause = function()
         if isPlaying then
             snd:Pause()
@@ -238,19 +241,41 @@ function UILibrary:CreateAudioPlayer(id, title, parent)
         end
     end
 
-    pBtn.MouseButton1Click:Connect(function()
-        if isPlaying then
-            selfAudio.Pause()
-        else
-            if getgenv().ActiveChatAudio and getgenv().ActiveChatAudio ~= selfAudio then
-                getgenv().ActiveChatAudio.Pause()
-            end
+    selfAudio.Stop = function()
+        snd:Pause()
+        snd.TimePosition = 0
+        pBtn.Image = getcustomasset("RBX_Chat/assets/circle-play.png")
+        isPlaying = false
+        barFill.Size = UDim2.new(0, 0, 1, 0)
+        timeLbl.Text = formatTime(snd.TimeLength)
+    end
+
+    selfAudio.Play = function()
+        if not isPlaying then
             if not snd.IsLoaded then
                 snd.Loaded:Wait()
             end
             snd:Resume()
             pBtn.Image = getcustomasset("RBX_Chat/assets/circle-pause.png")
             isPlaying = true
+        end
+    end
+
+    selfAudio.GetTimeText = function()
+        if snd.IsLoaded then
+            return formatTime(snd.TimePosition)
+        end
+        return "0:00"
+    end
+
+    pBtn.MouseButton1Click:Connect(function()
+        if isPlaying then
+            selfAudio.Pause()
+        else
+            if getgenv().ActiveChatAudio and getgenv().ActiveChatAudio ~= selfAudio then
+                getgenv().ActiveChatAudio.Stop()
+            end
+            selfAudio.Play()
             getgenv().ActiveChatAudio = selfAudio
         end
     end)
@@ -337,6 +362,50 @@ LMG2L["MainFrame_3"]["Size"] = UDim2.new(0, 410, 0, 246)
 LMG2L["MainFrame_3"]["Position"] = UDim2.new(0, 186, 0, 14)
 LMG2L["MainFrame_3"]["Name"] = "MainFrame"
 LMG2L["MainFrame_3"]["BackgroundTransparency"] = 0.4
+
+LMG2L["MiniAudioPlayer"] = Instance.new("Frame", LMG2L["RBX_Chat_1"])
+LMG2L["MiniAudioPlayer"]["Active"] = true
+LMG2L["MiniAudioPlayer"]["Draggable"] = true
+LMG2L["MiniAudioPlayer"]["BorderSizePixel"] = 0
+LMG2L["MiniAudioPlayer"]["BackgroundColor3"] = Color3.fromRGB(53, 53, 53)
+LMG2L["MiniAudioPlayer"]["Size"] = UDim2.new(0, 72, 0, 72)
+LMG2L["MiniAudioPlayer"]["Position"] = UDim2.new(0, 14, 0, 104)
+LMG2L["MiniAudioPlayer"]["BackgroundTransparency"] = 0.4
+LMG2L["MiniAudioPlayer"]["Visible"] = false
+
+LMG2L["MiniAudio_UICorner"] = Instance.new("UICorner", LMG2L["MiniAudioPlayer"])
+
+LMG2L["MiniAudio_UIStroke"] = Instance.new("UIStroke", LMG2L["MiniAudioPlayer"])
+LMG2L["MiniAudio_UIStroke"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border
+LMG2L["MiniAudio_UIStroke"]["Color"] = Color3.fromRGB(63, 63, 63)
+
+LMG2L["MiniAudio_PlayPause"] = Instance.new("ImageButton", LMG2L["MiniAudioPlayer"])
+LMG2L["MiniAudio_PlayPause"]["BorderSizePixel"] = 0
+LMG2L["MiniAudio_PlayPause"]["BackgroundTransparency"] = 1
+LMG2L["MiniAudio_PlayPause"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+LMG2L["MiniAudio_PlayPause"]["Image"] = getcustomasset("RBX_Chat/assets/circle-play.png")
+LMG2L["MiniAudio_PlayPause"]["Size"] = UDim2.new(0, 40, 0, 40)
+LMG2L["MiniAudio_PlayPause"]["Position"] = UDim2.new(0, 16, 0, 18)
+
+LMG2L["MiniAudio_Close"] = Instance.new("ImageButton", LMG2L["MiniAudioPlayer"])
+LMG2L["MiniAudio_Close"]["BorderSizePixel"] = 0
+LMG2L["MiniAudio_Close"]["BackgroundTransparency"] = 1
+LMG2L["MiniAudio_Close"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+LMG2L["MiniAudio_Close"]["Image"] = getcustomasset("RBX_Chat/assets/close.png")
+LMG2L["MiniAudio_Close"]["Size"] = UDim2.new(0, 14, 0, 14)
+LMG2L["MiniAudio_Close"]["Name"] = "Close"
+LMG2L["MiniAudio_Close"]["Position"] = UDim2.new(0, 56, 0, 2)
+
+LMG2L["MiniAudio_Time"] = Instance.new("TextLabel", LMG2L["MiniAudioPlayer"])
+LMG2L["MiniAudio_Time"]["BorderSizePixel"] = 0
+LMG2L["MiniAudio_Time"]["BackgroundTransparency"] = 1
+LMG2L["MiniAudio_Time"]["Size"] = UDim2.new(1, 0, 0, 14)
+LMG2L["MiniAudio_Time"]["Position"] = UDim2.new(0, 0, 0, 2)
+LMG2L["MiniAudio_Time"]["Text"] = "0:00"
+LMG2L["MiniAudio_Time"]["TextColor3"] = Color3.fromRGB(200, 200, 200)
+LMG2L["MiniAudio_Time"]["FontFace"] = Font.new("rbxasset://fonts/families/BuilderSans.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+LMG2L["MiniAudio_Time"]["TextSize"] = 12
+LMG2L["MiniAudio_Time"]["TextXAlignment"] = Enum.TextXAlignment.Center
 
 LMG2L["StickerMenu_20"] = Instance.new("Frame", LMG2L["MainFrame_3"])
 LMG2L["StickerMenu_20"]["BorderSizePixel"] = 0
@@ -868,6 +937,26 @@ LMG2L["StickerButton_1f"].MouseButton1Click:Connect(function()
     end
 end)
 
+LMG2L["MiniAudio_PlayPause"].MouseButton1Click:Connect(function()
+    local activeAudio = getgenv().ActiveChatAudio
+    if activeAudio then
+        if activeAudio.IsPlaying() then
+            activeAudio.Pause()
+        else
+            activeAudio.Play()
+        end
+    end
+end)
+
+LMG2L["MiniAudio_Close"].MouseButton1Click:Connect(function()
+    local activeAudio = getgenv().ActiveChatAudio
+    if activeAudio then
+        activeAudio.Stop()
+        getgenv().ActiveChatAudio = nil
+    end
+    LMG2L["MiniAudioPlayer"].Visible = false
+end)
+
 local function AddSticker(id)
     local btn = Instance.new("ImageButton", LMG2L["StickerScroll_21"])
     btn.Size = UDim2.new(0, 60, 0, 60)
@@ -910,7 +999,52 @@ end)
 
 task.spawn(function()
     while RunService.RenderStepped:Wait() do
-        LMG2L["Loading_17"].Rotation = LMG2L["Loading_17"].Rotation + 5
+        if LMG2L["Loading_17"].Visible then
+            LMG2L["Loading_17"].Rotation = LMG2L["Loading_17"].Rotation + 5
+        end
+        
+        local activeAudio = getgenv().ActiveChatAudio
+        if activeAudio and activeAudio.Frame and activeAudio.Frame.Parent then
+            local frame = activeAudio.Frame
+            local mainVisible = LMG2L["MainFrame_3"].Visible
+            
+            local scrollFrame = LMG2L["ScrollingFrame_4"]
+            local isVisibleInScroll = true
+            
+            if mainVisible then
+                local frameTop = frame.AbsolutePosition.Y
+                local frameBottom = frameTop + frame.AbsoluteSize.Y
+                local scrollTop = scrollFrame.AbsolutePosition.Y
+                local scrollBottom = scrollTop + scrollFrame.AbsoluteWindowSize.Y
+                
+                if frameBottom < scrollTop or frameTop > scrollBottom then
+                    isVisibleInScroll = false
+                end
+            end
+            
+            if not mainVisible or not isVisibleInScroll then
+                if activeAudio.IsPlaying() and not LMG2L["MiniAudioPlayer"].Visible then
+                    LMG2L["MiniAudioPlayer"].Visible = true
+                end
+                
+                if LMG2L["MiniAudioPlayer"].Visible then
+                    if activeAudio.IsPlaying() then
+                        LMG2L["MiniAudio_PlayPause"].Image = getcustomasset("RBX_Chat/assets/circle-pause.png")
+                    else
+                        LMG2L["MiniAudio_PlayPause"].Image = getcustomasset("RBX_Chat/assets/circle-play.png")
+                    end
+                    if activeAudio.GetTimeText then
+                        LMG2L["MiniAudio_Time"].Text = activeAudio.GetTimeText()
+                    end
+                end
+            else
+                LMG2L["MiniAudioPlayer"].Visible = false
+            end
+        else
+            if LMG2L["MiniAudioPlayer"] then
+                LMG2L["MiniAudioPlayer"].Visible = false
+            end
+        end
     end
 end)
 
