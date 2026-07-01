@@ -84,6 +84,11 @@ if not isfile("RBX_Chat/assets/step-back.png") then
     writefile("RBX_Chat/assets/step-back.png", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/assets/step-back.png"))
 end
 
+if not isfile("RBX_Chat/assets/arrow-left.png") then
+    SendNotification("RBX Chat", "Baixando asset ''arrow-left.png''...", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
+    writefile("RBX_Chat/assets/arrow-left.png", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/assets/arrow-left.png"))
+end
+
 if not isfile("RBX_Chat/stickers/Stickers.lua") then
     SendNotification("RBX Chat", "Baixando arquivo ''Stickers.lua''...", 3, getcustomasset("RBX_Chat/assets/message-square-more.png"))
     writefile("RBX_Chat/stickers/Stickers.lua", game:HttpGet("https://github.com/AdmBrookhavenScripts/RBX_Chat/raw/refs/heads/main/stickers/Stickers.lua"))
@@ -182,7 +187,7 @@ function UILibrary:CreateAudioPlayer(id, title, parent)
     local barBg = Instance.new("TextButton", aFrame)
     barBg.Size = UDim2.new(1, -94, 0, 6)
     barBg.Position = UDim2.new(0, 44, 0, 32)
-    barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    barBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     barBg.AutoButtonColor = false
     barBg.Text = ""
 
@@ -395,6 +400,15 @@ LMG2L["MiniAudio_Close"]["Image"] = getcustomasset("RBX_Chat/assets/close.png")
 LMG2L["MiniAudio_Close"]["Size"] = UDim2.new(0, 14, 0, 14)
 LMG2L["MiniAudio_Close"]["Name"] = "Close"
 LMG2L["MiniAudio_Close"]["Position"] = UDim2.new(0, 56, 0, 2)
+
+LMG2L["MiniAudio_ScrollTo"] = Instance.new("ImageButton", LMG2L["MiniAudioPlayer"])
+LMG2L["MiniAudio_ScrollTo"]["BorderSizePixel"] = 0
+LMG2L["MiniAudio_ScrollTo"]["BackgroundTransparency"] = 1
+LMG2L["MiniAudio_ScrollTo"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+LMG2L["MiniAudio_ScrollTo"]["Image"] = getcustomasset("RBX_Chat/assets/arrow-left.png")
+LMG2L["MiniAudio_ScrollTo"]["Size"] = UDim2.new(0, 14, 0, 14)
+LMG2L["MiniAudio_ScrollTo"]["Name"] = "ScrollTo"
+LMG2L["MiniAudio_ScrollTo"]["Position"] = UDim2.new(0, 2, 0, 2)
 
 LMG2L["MiniAudio_Time"] = Instance.new("TextLabel", LMG2L["MiniAudioPlayer"])
 LMG2L["MiniAudio_Time"]["BorderSizePixel"] = 0
@@ -957,6 +971,18 @@ LMG2L["MiniAudio_Close"].MouseButton1Click:Connect(function()
     LMG2L["MiniAudioPlayer"].Visible = false
 end)
 
+LMG2L["MiniAudio_ScrollTo"].MouseButton1Click:Connect(function()
+    local activeAudio = getgenv().ActiveChatAudio
+    if activeAudio and activeAudio.Frame and activeAudio.Frame.Parent then
+        local scrollFrame = LMG2L["ScrollingFrame_4"]
+        local targetY = activeAudio.Frame.AbsolutePosition.Y - scrollFrame.AbsolutePosition.Y + scrollFrame.CanvasPosition.Y
+        targetY = targetY - (scrollFrame.AbsoluteWindowSize.Y / 2) + (activeAudio.Frame.AbsoluteSize.Y / 2)
+        local maxScroll = math.max(0, scrollFrame.AbsoluteCanvasSize.Y - scrollFrame.AbsoluteWindowSize.Y)
+        targetY = math.clamp(targetY, 0, maxScroll)
+        scrollFrame.CanvasPosition = Vector2.new(0, targetY)
+    end
+end)
+
 local function AddSticker(id)
     local btn = Instance.new("ImageButton", LMG2L["StickerScroll_21"])
     btn.Size = UDim2.new(0, 60, 0, 60)
@@ -1028,6 +1054,8 @@ task.spawn(function()
                 end
                 
                 if LMG2L["MiniAudioPlayer"].Visible then
+                    LMG2L["MiniAudio_ScrollTo"].Visible = mainVisible
+                    
                     if activeAudio.IsPlaying() then
                         LMG2L["MiniAudio_PlayPause"].Image = getcustomasset("RBX_Chat/assets/circle-pause.png")
                     else
