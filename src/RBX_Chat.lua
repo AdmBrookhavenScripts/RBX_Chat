@@ -4,6 +4,7 @@ local Players = cloneref(game:GetService("Players"))
 local HttpService = cloneref(game:GetService("HttpService"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 local ContentProvider = cloneref(game:GetService("ContentProvider"))
+local MarketplaceService = cloneref(game:GetService("MarketplaceService"))
 local HttpRequest = request or http_request or syn.request
 
 local Player = Players.LocalPlayer
@@ -161,21 +162,17 @@ function UILibrary:CreateAudioPlayer(id, title, parent)
     titleLbl.TextTruncate = Enum.TextTruncate.AtEnd
 
     if not getgenv().AudioNames[tostring(id)] then
-        task.spawn(function()
-            local s, r = pcall(function()
-                local response = HttpRequest({
-                    Url = "https://economy.roproxy.com/v2/assets/" .. tostring(id) .. "/details",
-                    Method = "GET"
-                })
-                return HttpService:JSONDecode(response.Body)
-            end)
-            if s and r and r.Name then
-                getgenv().AudioNames[tostring(id)] = r.Name
-                titleLbl.Text = r.Name
-            else
-                titleLbl.Text = "Áudio " .. tostring(id)
-            end
+    task.spawn(function()
+        local s, r = pcall(function()
+            return MarketplaceService:GetProductInfo(id)
         end)
+        if s and r and r.Name then
+            getgenv().AudioNames[tostring(id)] = r.Name
+            titleLbl.Text = r.Name
+        else
+            titleLbl.Text = "Desconhecido"
+          end
+       end)
     end
 
     local pBtn = Instance.new("ImageButton", aFrame)
